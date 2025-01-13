@@ -1,0 +1,57 @@
+{
+    "name": "asreview-launcher",
+    "version": "1.0.0",
+    "description": "ASReview Lab Launcher",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder",
+        "postinstall": "electron-builder install-app-deps"
+    },
+    "build": {
+        "appId": "com.asreview.launcher",
+        "productName": "ASReview Launcher",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "**/*",
+            "!portable-python/**/*",
+            "portable-python/python.exe",
+            "portable-python/pythonw.exe",
+            "portable-python/python38.dll",
+            "portable-python/Lib/**/*",
+            "portable-python/Scripts/**/*"
+        ],
+        "win": {
+            "target": "nsis",
+            "icon": "build/icon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true
+        },
+        "extraResources": [
+            {
+                "from": "portable-python",
+                "to": "portable-python",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ]
+    },
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+        "electron": "^28.1.0",
+        "electron-builder": "^24.13.3"
+    },
+    "dependencies": {
+        "electron-log": "^5.0.1",
+        "electron-store": "^8.1.0",
+        "node-fetch": "^2.7.0"
+    },
+    "keywords": []
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASReview Lab Launcher</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .status-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #startButton {
+            background: #2ecc71;
+            color: white;
+        }
+        #startButton:hover:not(:disabled) {
+            background: #27ae60;
+        }
+        #stopButton {
+            background: #e74c3c;
+            color: white;
+        }
+        #stopButton:hover:not(:disabled) {
+            background: #c0392b;
+        }
+        #openButton {
+            background: #3498db;
+            color: white;
+        }
+        #openButton:hover:not(:disabled) {
+            background: #2980b9;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .instructions h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .progress {
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 30%;
+            height: 100%;
+            background: #3498db;
+            animation: progress 1s infinite linear;
+        }
+        @keyframes progress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ASReview Lab Launcher</h1>
+        
+        <div class="status-container">
+            <div id="status">Status: Not Running</div>
+            <div class="progress" id="progressBar">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="startButton">Start ASReview Lab</button>
+            <button id="openButton" disabled>Open in Browser</button>
+            <button id="stopButton" disabled>Stop ASReview Lab</button>
+        </div>
+
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <ol>
+                <li>Click "Start ASReview Lab" to launch the server</li>
+                <li>Wait for the server to start (this may take a few moments)</li>
+                <li>Once started, click "Open in Browser" to use ASReview Lab</li>
+                <li>When finished, click "Stop ASReview Lab"</li>
+            </ol>
+            <p><strong>Note:</strong> Keep this application running while using ASReview Lab</p>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const openButton = document.getElementById('openButton');
+        const statusElement = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+
+        startButton.addEventListener('click', () => {
+            startButton.disabled = true;
+            progressBar.style.display = 'block';
+            ipcRenderer.send('start-asreview');
+        });
+
+        stopButton.addEventListener('click', () => {
+            ipcRenderer.send('stop-asreview');
+        });
+
+        openButton.addEventListener('click', () => {
+            require('electron').shell.openExternal('http://localhost:5000');
+        });
+
+        ipcRenderer.on('status-update', (event, message) => {
+            statusElement.textContent = `Status: ${message}`;
+        });
+
+        ipcRenderer.on('asreview-started', () => {
+            statusElement.textContent = 'Status: Running';
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            openButton.disabled = false;
+            progressBar.style.display = 'none';
+        });
+
+        ipcRenderer.on('asreview-stopped', () => {
+            statusElement.textContent = 'Status: Not Running';
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            openButton.disabled = true;
+            progressBar.style.display = 'none';
+        });
+
+        ipcRenderer.on('error', (event, message) => {
+            statusElement.textContent = `Status: Error - ${message}`;
+            startButton.disabled = false;
+            progressBar.style.display = 'none';
+            alert(`Error: ${message}`);
+        });
+
+        // Check initial status
+        ipcRenderer.send('check-status');
+    </script>
+</body>
+</html>
